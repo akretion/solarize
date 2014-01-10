@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "README.md",
     "Rakefile",
     "lib/solarize.rb",
+    "solarize.gemspec",
     "test/helper.rb",
     "test/test_solarize.rb"
   ]
