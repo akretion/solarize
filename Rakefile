@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "solarize"
   gem.homepage = "http://github.com/rvalyi/solarize"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{solarize: gives Apache superpowers to your ooor OpenERP proxies}
+  gem.description = %Q{solarize: gives Apache superpowers to your ooor OpenERP proxies}
   gem.email = "rvalyi@gmail.com"
   gem.authors = ["Raphaël Valyi"]
   # dependencies defined in Gemfile
