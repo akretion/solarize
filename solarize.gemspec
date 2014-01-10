@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Rapha\u{eb}l Valyi"]
   s.date = "2014-01-10"
-  s.description = "TODO: longer description of your gem"
+  s.description = "solarize: gives Apache superpowers to your ooor OpenERP proxies"
   s.email = "rvalyi@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -28,11 +28,11 @@ Gem::Specification.new do |s|
     "test/helper.rb",
     "test/test_solarize.rb"
   ]
-  s.homepage = "http://github.com/rvalyi/solarize"
+  s.homepage = "http://github.com/akretion/solarize"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.24"
-  s.summary = "TODO: one-line summary of your gem"
+  s.summary = "solarize: gives Apache superpowers to your ooor OpenERP proxies"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
