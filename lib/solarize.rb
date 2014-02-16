@@ -195,15 +195,52 @@ module Ooor
   module SolrLoader
     extend ActiveSupport::Concern
               
-    SCHEMA_SUFFIXES = /_ss$|_texts$|_is$|_ds$|_dts$|_bins$|_fs$|_bs$|_sms$/
+    SCHEMA_SUFFIXES = /_ss$|_texts$|_is$|_its$|_ds$|_dts$|_bins$|_fs$|_bs$|_sms$|_itms$|_ims$/
     module ClassMethods
       def from_solr(stored_values)
+        reload_fields_definition
         fields = {}
-        stored_values.each do |k, v| #TODO relations
-          #process_m2o(fields, k)
-          fields[k.sub(SCHEMA_SUFFIXES, '')] = v #TODO not if m2o
+        m2o_keys = []
+        consumed_keys = []
+        stored_values.each do |k, v| # m2o
+          if k =~ /-m2o_ss/
+            m2o_keys << k.sub(/-m2o_ss/, '').split('-')[0]
+          end
         end
-        fields.merge!({solr_id: stored_values['id'], solr_score: stored_values['score'], id: stored_values['id'].split(' ')[2]})
+        m2o_keys.sort_by!(&:length)
+        level0_m2o_keys = []
+        m2o_keys.each do |k|
+          level0_m2o_keys << k unless level0_m2o_keys.any? {|i| k.index(i)}
+        end
+        level0_m2o_keys.each do |m2o_key|
+            consumed_keys << m2o_key
+            m2o = many2one_associations[m2o_key]
+            model_key = m2o['relation']
+            p "ZZZZZZZ", self
+            related_class = self.const_get(model_key)
+            m2o_hash = {}
+            stored_values.each do |k, v|
+              if k =~ /^#{m2o_key}_/
+                consumed_keys << k
+                if k == "#{m2o_key}_its"
+                  m2o_hash["id"] = v
+                elsif k =~ /^#{m2o_key}-/
+                  name = k.sub(/^#{m2o_key}-/, '').split('-')[0]
+                  m2o_hash[name] = v
+                else
+                  m2o_hash[k.sub(/^#{m2o_key}_/, '')] = v
+                end
+              end
+            end
+            fields[m2o_key] = related_class.from_solr(m2o_hash)
+        end
+        (stored_values.keys - consumed_keys).each do |k|
+          fields[k.sub(SCHEMA_SUFFIXES, '')] = stored_values[k] #TODO o2m, m2m
+        end
+        if stored_values['id'].is_a?(String)
+          id = stored_values['id'].split(' ')[2]
+          fields.merge!({solr_id: stored_values['id'], solr_score: stored_values['score'], id: id})
+        end
         new(fields, [])
       end
     end
