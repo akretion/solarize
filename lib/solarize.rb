@@ -141,6 +141,7 @@ module Sunspot
             hits_for_class = id_hit_hash[class_name]
             hits.each do |hit_pair|
               hit_pair[1].result = session[class_name].from_solr(hit_pair[1].stored_values)
+#exit #TODO
             end
 
           end
@@ -197,51 +198,113 @@ module Ooor
               
     SCHEMA_SUFFIXES = /_ss$|_texts$|_is$|_its$|_ds$|_dts$|_bins$|_fs$|_bs$|_sms$|_itms$|_ims$/
     module ClassMethods
-      def from_solr(stored_values)
+      def from_solr(stored_values, consumed_keys=[])
+    p "ZZZZZZZ", self, stored_values
         reload_fields_definition
         fields = {}
         m2o_keys = []
-        consumed_keys = []
+#        consumed_keys = []
         stored_values.each do |k, v| # m2o
           if k =~ /-m2o_ss/
             m2o_keys << k.sub(/-m2o_ss/, '').split('-')[0]
           end
         end
         m2o_keys.sort_by!(&:length)
+p "m2o_keys", m2o_keys
         level0_m2o_keys = []
         m2o_keys.each do |k|
           level0_m2o_keys << k unless level0_m2o_keys.any? {|i| k.index(i)}
         end
+p "level0_m2o_keys", level0_m2o_keys
         level0_m2o_keys.each do |m2o_key|
+p "---- m2o_key", m2o_key
             consumed_keys << m2o_key
             m2o = many2one_associations[m2o_key]
             model_key = m2o['relation']
-            p "ZZZZZZZ", self
             related_class = self.const_get(model_key)
             m2o_hash = {}
             stored_values.each do |k, v|
-              if k =~ /^#{m2o_key}_/
+              if k == "#{m2o_key}_its"
                 consumed_keys << k
-                if k == "#{m2o_key}_its"
-                  m2o_hash["id"] = v
-                elsif k =~ /^#{m2o_key}-/
-                  name = k.sub(/^#{m2o_key}-/, '').split('-')[0]
-                  m2o_hash[name] = v
-                else
-                  m2o_hash[k.sub(/^#{m2o_key}_/, '')] = v
-                end
+                m2o_hash["id"] = v
+              elsif k =~ /^#{m2o_key}-/
+                consumed_keys << k
+                name = k.sub(/^#{m2o_key}-/, '').split('-')[0]
+                m2o_hash[name] = v
+              elsif k =~ /^#{m2o_key}\//
+                consumed_keys << k
+                m2o_hash[k.sub(/^#{m2o_key}\//, '')] = v
               end
             end
-            fields[m2o_key] = related_class.from_solr(m2o_hash)
+            fields[m2o_key] = related_class.from_solr(m2o_hash, consumed_keys)
         end
+p "ccccccc consumed_keys", consumed_keys
+
         (stored_values.keys - consumed_keys).each do |k|
-          fields[k.sub(SCHEMA_SUFFIXES, '')] = stored_values[k] #TODO o2m, m2m
+          if k =~ /-o2m_sms$/
+            x2m_key = k.sub(/-o2m_sms$/, '').split('-')[0]
+p "xxxxxxxxxx x2m_key", x2m_key
+            x2m = one2many_associations.merge(many2many_associations).merge(polymorphic_m2o_associations)[x2m_key]
+            model_key = x2m['relation']
+            related_class = self.const_get(model_key)
+            ids = stored_values["#{x2m_key}_itms"]
+            vals = stored_values[k]
+            name = k.sub(/^#{x2m_key}-/, '').split('-')[0]
+            fields[x2m_key] = []
+            consumed_keys << k
+            consumed_keys << "#{x2m_key}_itms"
+            ids.each_with_index do |id, index|
+              x2m_hash = {"id" => id, name => vals[index]}
+p "x2m_hash", x2m_hash
+              related_class.reload_fields_definition
+              if related_class.many2one_associations[name]
+                x2m_hash["#{name}-#{name}-m2o_ss"] = vals[index] #TODO name is on m2o
+              else
+                x2m_hash[name] = vals[index]
+              end
+              fields[x2m_key] << related_class.from_solr(x2m_hash, consumed_keys)
+            end
+          end
+        end
+
+        (stored_values.keys - consumed_keys).each do |k|
+          if k =~ /-m2m_sms$/
+            x2m_key = k.sub(/-m2m_sms$/, '').split('-')[0]
+p "xxxxxxxxxx x2m_key", x2m_key
+            x2m = one2many_associations.merge(many2many_associations).merge(polymorphic_m2o_associations)[x2m_key]
+            model_key = x2m['relation']
+            related_class = self.const_get(model_key)
+            ids = stored_values["#{x2m_key}_itms"]
+            vals = stored_values[k]
+            name = k.sub(/^#{x2m_key}-/, '').split('-')[0]
+            fields[x2m_key] = []
+            consumed_keys << k
+            consumed_keys << "#{x2m_key}_itms"
+            ids.each_with_index do |id, index|
+              x2m_hash = {"id" => id, name => vals[index]}
+p "x2m_hash", x2m_hash
+              related_class.reload_fields_definition
+              if related_class.imany2one_associations[name]
+                x2m_hash[name] = vals[index] #TODO name is on m2o
+              else
+                x2m_hash[name] = vals[index]
+              end
+              fields[x2m_key] << related_class.from_solr(x2m_hash, consumed_keys)
+            end
+          end
+        end
+
+
+        (stored_values.keys - consumed_keys).each do |k|
+          fields[k.sub(SCHEMA_SUFFIXES, '')] = stored_values[k]
         end
         if stored_values['id'].is_a?(String)
           id = stored_values['id'].split(' ')[2]
           fields.merge!({solr_id: stored_values['id'], solr_score: stored_values['score'], id: id})
         end
-        new(fields, [])
+        r=new(fields, [])
+p r
+r
       end
     end
   end
