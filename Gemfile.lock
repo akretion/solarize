@@ -1,7 +1,15 @@
 PATH
+  remote: .
+  specs:
+    solarize (0.0.1)
+      ooor
+      rsolr
+      sunspot
+
+PATH
   remote: ../ooor
   specs:
-    ooor (2.0.0)
+    ooor (2.0.2)
       activemodel (>= 2.3.5)
       faraday
 
@@ -84,4 +92,5 @@ DEPENDENCIES
   jeweler (~> 1.8.7)
   ooor!
   rsolr
+  solarize!
   sunspot!
