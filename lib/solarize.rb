@@ -40,16 +40,23 @@ module Sunspot
               send t[0], k, options
             end
           end
-  #TODO association fields
-#          string :name, :as => 'name_ss'
-          
-          # TODO iterate fields
-#          metadata[:fields].each do |field|
-#            field_type, field_mode = field[:type].split('-')
-#            options = {stored: true}
-#            options.merge!(multiple: true) if field_mode.eql?("Array")
-#            send field_type.downcase, field[:name], options
-#          end
+
+          many2one_associations.each do |k, v|
+            options = {stored: true, as: "#{k}_its"} #TODO name
+            integer k, options
+          end
+          #TODO included many2one. introspection method in solerp?
+
+          one2many_associations.each do |k, v|
+            options = {stored: true, multiple: true, as: "#{k}_itms"} #TODO names
+            integer k, options
+          end
+
+          many2many_associations.each do |k, v|
+            options = {stored: true, multiple: true, as: "#{k}_itms"} #TODO names
+            integer k, options
+          end
+
         end
       end
     end
@@ -221,8 +228,9 @@ module Ooor
     extend ActiveSupport::Concern
     module ClassMethods
       def new(config={})
-        super
+        res = super
         Sunspot.config.solr.url = Ooor.default_config[:solr_url]
+        res
       end
     end
   end
