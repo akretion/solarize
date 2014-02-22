@@ -21,9 +21,28 @@ module Sunspot
 
 
     module MakeItSearchable
+      OE2SOLR = {
+                  'selection' => ['string', 's'],
+                  'char' => ['string', 's'],
+                  'text' => ['text', 'text'],
+                  'integer' => ['integer', 'it'],
+                  'float' => ['float', 'f'],
+                  'date' => ['date', 'd'],
+                  'datetime' => ['datetime', 'dt']
+                }
       def make_it_searchable
+        #TODO don't do that twice
         searchable(auto_index: false, auto_remove: false) do
-          string :name, :as => 'name_ss'
+          text 'text' #default text search. use may use copyField to fill it.
+          fields.each do |k, v|
+            if t = OE2SOLR[v['type']]
+              options = {stored: true, as: "#{k}_#{t[1]}s"}
+              send t[0], k, options
+            end
+          end
+  #TODO association fields
+#          string :name, :as => 'name_ss'
+          
           # TODO iterate fields
 #          metadata[:fields].each do |field|
 #            field_type, field_mode = field[:type].split('-')
@@ -38,13 +57,6 @@ module Sunspot
 
     module ActsAsMethods
       def searchable?; true; end
-
-      def auto_setup()
-        unless Setup.for(self)
-          Sunspot.setup(self) do #TODO use introspection + DSL to set some default search behavior
-          end
-        end
-      end
 
       def searchable(options = {}, &block)
         Sunspot.setup(self, &block)
@@ -92,7 +104,7 @@ module Sunspot
             end
           end
         end
-        search.execute#.results
+        search.execute
       end
 
       def solr_execute_search_ids(options = {})
