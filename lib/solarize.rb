@@ -44,18 +44,18 @@ module Sunspot
           end
 
           many2one_associations.each do |k, v|
-            options = {stored: true, as: "#{k}_its"} #TODO name
+            options = {stored: true, as: "#{k}/id_its"} #TODO name
             integer k, options
           end
           #TODO included many2one. introspection method in solerp?
 
           one2many_associations.each do |k, v|
-            options = {stored: true, multiple: true, as: "#{k}_itms"} #TODO names
+            options = {stored: true, multiple: true, as: "#{k}/id_itms"} #TODO names
             integer k, options
           end
 
           many2many_associations.each do |k, v|
-            options = {stored: true, multiple: true, as: "#{k}_itms"} #TODO names
+            options = {stored: true, multiple: true, as: "#{k}/id_itms"} #TODO names
             integer k, options
           end
 
@@ -269,26 +269,29 @@ module Ooor
 
         associations = one2many_associations.merge(many2many_associations)
         (stored_values.keys - consumed_keys).each do |k|
-          if m = /-(o|m)2m(-m2o|)_sms$/.match(k)
-            x = m[1] # o2m or m2m
-            x2m_key = k.sub(/-(o|m)2m(-m2o|)_sms$/, '').split('-')[0]
+#          if m = /-(o|m)2m(-m2o|)_sms$/.match(k)
+          if k.end_with?('_sms')
+#            x2m_key = k.sub(/-(o|m)2m(-m2o|)_sms$/, '').split('-')[0]
+            x2m_key = k.split("/")[0]
             x2m = associations[x2m_key]
             model_key = x2m['relation']
             related_class = self.const_get(model_key)
-            ids = stored_values["#{x2m_key}_itms"]
-            name = k.sub(/^#{x2m_key}-/, '').split('-')[0]
+            ids = stored_values["#{x2m_key}/id_itms"]
+            name = k.split('/')[1].sub('_sms', '')
             fields[x2m_key] = []
             consumed_keys << k
-            consumed_keys << "#{x2m_key}_itms"
-            if m[2] == "-m2o" #item decription is carried by a m2o
-              vals = stored_values["#{x2m_key}-#{name}-#{x}2m-m2o_sms"]
-              m2o_ids = stored_values["#{x2m_key}-#{name}-#{x}2m-m2o_itms"]
+            consumed_keys << "#{x2m_key}/id_itms"
+            if k.split('/').size > 2 #item decription is carried by a m2o
+              vals = stored_values[k]
+              m2o_key = k.split('/')[1]
+              m2o_ids = stored_values["#{x2m_key}/#{m2o_key}/id_itms"]
               ids.each_with_index do |id, index|
                 x2m_hash = {"id" => id}
+                rec_name = k.split('/')[2].sub('_sms', '')
                 related_class.reload_fields_definition
                 if m2o = related_class.many2one_associations[name]
                   m2o_class = self.const_get(m2o['relation'])
-                  x2m_hash[name] = m2o_class.new({"id" => m2o_ids[index], name => vals[index]}, [])
+                  x2m_hash[name] = m2o_class.new({"id" => m2o_ids[index], rec_name => vals[index]}, [])
                 end
                 fields[x2m_key] << related_class.new(x2m_hash, [])
               end
