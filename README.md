@@ -19,10 +19,59 @@ example
 
 
 ```ruby
-o=Ooor.new(username:'admin', password: 'admin', url: 'http://localhost:8069', database: 'ooor_test', solr_url: 'http://localhost:8983/solr/test')
+Ooor.new(username:'admin', password: 'admin', url: 'http://localhost:8069', database: 'ooor_test', solr_url: 'http://localhost:8983/solr/test')
+
+#flat fields
+
 q=ProductProduct.solr_search do
   with(:name, "USB Adapter")
+end
+q.results
+
+q=ProductProduct.solr_search do
+  with(:id, "solr1 product.product 36")
+end
+q.results
+
+q=ProductProduct.solr_search do
+  with(:sale_ok, true)
+end
+q.results
+
+
+#m2o
+
+q=ProductProduct.solr_search do
   with(:categ_id, 7)
+end
+q.results
+
+
+#denormalized m2o
+
+q=ProductProduct.solr_search do
+  with('categ_id/name', "External Devices")
+end
+q.results
+
+q=ProductProduct.solr_search do
+  with('uom_id/name', "Dozen(s)")
+end
+q.results
+
+
+#o2m
+
+q=ProductProduct.solr_search do
+  with(:seller_ids, 46)
+end
+q.results
+
+
+#m2m
+
+q=ProductProduct.solr_search do
+  with(:message_ids, 81)
 end
 q.results
 ```
