@@ -14,8 +14,8 @@ That being said, once an Ooor proxy is loaded from SolR, it behaves just like a 
 
 Solarize doesn"t cover Sunspot indexation features. Instead it"s built to work in association with the [solerp](https://github.com/akretion/solerp) OpenERP module which will index your OpenERP objects into SolR so you can retrieve them with solarize or any other SolR client.
 
-example
-=======
+examples
+========
 
 
 ```ruby
