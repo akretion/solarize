@@ -46,9 +46,6 @@ q=ProductProduct.solr_search do
 end
 q.results
 
-
-#denormalized m2o
-
 q=ProductProduct.solr_search do
   with('categ_id/name', "External Devices")
 end
@@ -60,10 +57,24 @@ end
 q.results
 
 
+#denormalized m2o
+#supposing we included categ_id for denormalization into the product records in solerp
+
+q=ProductProduct.solr_search do
+  with('categ_id/parent_id/name', "All products / Saleable")
+end
+q.results
+
+
 #o2m
 
 q=ProductProduct.solr_search do
   with(:seller_ids, 46)
+end
+q.results
+
+q=ProductProduct.solr_search do
+  with('seller_ids/name/name', 'Mediapole')
 end
 q.results
 
@@ -72,6 +83,11 @@ q.results
 
 q=ProductProduct.solr_search do
   with(:message_ids, 81)
+end
+q.results
+
+q=ProductProduct.solr_search do
+  with('message_ids/record_name', '[SW24] Switch, 24 ports')
 end
 q.results
 ```
