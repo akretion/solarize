@@ -250,35 +250,24 @@ module Ooor
       def from_solr(stored_values, consumed_keys=[])
         reload_fields_definition
         fields = {}
-        level0_m2o_keys = []
-        stored_values.each do |k, v| # m2o
-          if k =~ /-m2o_ss/ && ! k.index("/")
-            level0_m2o_keys << k.sub(/-m2o_ss/, '').split('-')[0]
-          end
-        end
-        level0_m2o_keys.each do |m2o_key|
+        level0_m2o_keys = many2one_associations.merge(polymorphic_m2o_associations)
+        level0_m2o_keys.each do |m2o_key, m2o|
           consumed_keys << m2o_key
-          m2o = many2one_associations[m2o_key]
           model_key = m2o['relation']
           related_class = self.const_get(model_key)
           m2o_hash = {}
           stored_values.each do |k, v|
-            if k == "#{m2o_key}_its"
-              consumed_keys << k
-              m2o_hash["id"] = v
-            elsif k =~ /^#{m2o_key}-/
-              consumed_keys << k
-              name = k.sub(/^#{m2o_key}-/, '').split('-')[0]
-              m2o_hash[name] = v
-            elsif k =~ /^#{m2o_key}\//
+            if k =~ /^#{m2o_key}\//
               consumed_keys << k
               m2o_hash[k.sub(/^#{m2o_key}\//, '')] = v
             end
           end
-          fields[m2o_key] = related_class.from_solr(m2o_hash, consumed_keys)
+          unless m2o_hash.keys.empty?
+            fields[m2o_key] = related_class.from_solr(m2o_hash, consumed_keys)
+          end
         end
 
-        associations = one2many_associations.merge(many2many_associations).merge(polymorphic_m2o_associations)
+        associations = one2many_associations.merge(many2many_associations)
         (stored_values.keys - consumed_keys).each do |k|
           if m = /-(o|m)2m(-m2o|)_sms$/.match(k)
             x = m[1] # o2m or m2m
