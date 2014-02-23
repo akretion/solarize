@@ -25,6 +25,7 @@ module Sunspot
                   'selection' => ['string', 's'],
                   'char' => ['string', 's'],
                   'text' => ['text', 'text'],
+                  'boolean' => ['boolean', 'b'],
                   'integer' => ['integer', 'it'],
                   'float' => ['float', 'f'],
                   'date' => ['date', 'd'],
@@ -33,6 +34,7 @@ module Sunspot
       def make_it_searchable
         #TODO don't do that twice
         searchable(auto_index: false, auto_remove: false) do
+          string 'id', as: 'id'
           text 'text' #default text search. use may use copyField to fill it.
           fields.each do |k, v|
             if t = OE2SOLR[v['type']]
@@ -66,15 +68,20 @@ module Sunspot
       def searchable?; true; end
 
       def searchable(options = {}, &block)
-        Sunspot.setup(self, &block)
-        class_attribute :sunspot_options
+        unless @searchable
+          Sunspot.setup(self, &block)
+          class_attribute :sunspot_options
+          @searchable = true
+        end
         options[:include] = Util::Array(options[:include])
         self.sunspot_options = options
       end
 
       def solr_search(options = {}, &block)
-        reload_fields_definition()
-        make_it_searchable()
+        unless @searchable
+          reload_fields_definition()
+          make_it_searchable()
+        end
         conn = self.connection
         solr_execute_search(options) do
           Sunspot.new_search(self, &block).tap do |search|
