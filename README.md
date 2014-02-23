@@ -1,4 +1,4 @@
-solarize: gives Apache SolR superpowers to your ooor proxies
+Apache SolR superpowers to your ooor Ruby proxies to OpenERP
 ============================================================
 
 Solarize is a [Sunspot](https://github.com/sunspot/sunspot) adapter for [Ooor](https://github.com/akretion/ooor).
