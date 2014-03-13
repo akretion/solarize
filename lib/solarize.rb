@@ -263,7 +263,7 @@ module Ooor
             end
           end
           unless m2o_hash.keys.empty?
-            fields[m2o_key] = related_class.from_solr(m2o_hash, consumed_keys)
+            fields[m2o_key] = related_class.from_solr(m2o_hash)
           end
         end
 
