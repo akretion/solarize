@@ -26,7 +26,7 @@ module Sunspot
                   'char' => ['string', 's'],
                   'text' => ['text', 'text'],
                   'boolean' => ['boolean', 'b'],
-                  'integer' => ['integer', 'it'],
+                  'integer' => ['integer', 'i'],
                   'float' => ['float', 'f'],
                   'date' => ['date', 'd'],
                   'datetime' => ['datetime', 'dt']
@@ -44,18 +44,18 @@ module Sunspot
           end
 
           many2one_associations.each do |k, v|
-            options = {stored: true, as: "#{k}/id_its"} #TODO name
+            options = {stored: true, as: "#{k}/id_is"} #TODO name
             integer k, options
           end
           #TODO included many2one. introspection method in solerp?
 
           one2many_associations.each do |k, v|
-            options = {stored: true, multiple: true, as: "#{k}/id_itms"} #TODO names
+            options = {stored: true, multiple: true, as: "#{k}/id_ims"} #TODO names
             integer k, options
           end
 
           many2many_associations.each do |k, v|
-            options = {stored: true, multiple: true, as: "#{k}/id_itms"} #TODO names
+            options = {stored: true, multiple: true, as: "#{k}/id_ims"} #TODO names
             integer k, options
           end
 
@@ -276,15 +276,15 @@ module Ooor
             x2m = associations[x2m_key]
             model_key = x2m['relation']
             related_class = self.const_get(model_key)
-            ids = stored_values["#{x2m_key}/id_itms"]
+            ids = stored_values["#{x2m_key}/id_ims"]
             name = k.split('/')[1].sub('_sms', '')
             fields[x2m_key] = []
             consumed_keys << k
-            consumed_keys << "#{x2m_key}/id_itms"
+            consumed_keys << "#{x2m_key}/id_ims"
             if k.split('/').size > 2 #item decription is carried by a m2o
               vals = stored_values[k]
               m2o_key = k.split('/')[1]
-              m2o_ids = stored_values["#{x2m_key}/#{m2o_key}/id_itms"]
+              m2o_ids = stored_values["#{x2m_key}/#{m2o_key}/id_ims"]
               ids.each_with_index do |id, index|
                 x2m_hash = {"id" => id}
                 rec_name = k.split('/')[2].sub('_sms', '')
